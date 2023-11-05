@@ -1,0 +1,22 @@
+body {
+    font-family: 'Lato';
+    background-color: #FFB347;
+}
+
+h1 {
+    margin: 0 auto 12px;
+    font-family: 'MontserratAlternates';
+    font-size: 48px;
+    text-align: center;
+}
+
+p {
+    font-size: 16;
+    line-height: 2;
+    letter-spacing: 1px;
+}
+
+img {
+    display: block;
+    margin: 0 auto;
+}
