@@ -14,24 +14,90 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 
 // OKHttpClient
-import okhttp3.OkHttpClient; // #TO-DO ///: use okhttp4 instead for endpoints~~ and ~~api =: different kind of api key? ask pino | ????
+import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 import okhttp3.ResponseBody;
 // Random numbers
 import java.util.concurrent.ThreadLocalRandom;
 
+// json gson parsing
+import com.google.gson.Gson;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.Reader;
+
+// main
 @SpringBootApplication
 public class DemoApplication
 {
 	public static void main(String[] args)
 	{
 		SpringApplication.run(DemoApplication.class, args);
-        MoviePool movie_pool = new MoviePool();
+        	MoviePool movie_pool = new MoviePool();
 
-        System.out.println(movie_pool.getMovie(3));
+        	System.out.println(movie_pool.getMovie(3));
 	}
 }
+
+// /* spring session configuration
+@Configuration
+@EnableRedisHttpSession
+public class SessionConfig extends AbstractHttpSessionApplicationInitializer {
+    @Bean
+    public JedisConnectionFactory connectionFactory() {
+        return new JedisConnectionFactory();
+    }
+}
+// */
+
+// spring boot session controller
+// // #TO-CHECK ///: https://www.baeldung.com/spring-session
+@RestController
+public class SessionController
+{
+    @RequestMapping("/")
+    public String helloAdmin()
+    {
+        return "hello admin";
+    }
+}
+
+// /* spring boot session security auth
+@Configuration
+@EnableWebSecurity
+public class SecurityConfig
+{
+    @Bean
+    public InMemoryUserDetailsManager userDetailsService(PasswordEncoder passwordEncoder)
+    {
+        UserDetails user = User.withUsername("admin")
+            .password(passwordEncoder.encode("password"))
+            .roles("ADMIN")
+            .build();
+        return new InMemoryUserDetailsManager(user);
+    }
+
+    @Bean
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception
+    {
+        http.httpBasic()
+            .and()
+            .authorizeRequests()
+            .antMatchers("/")
+            .hasRole("ADMIN")
+            .anyRequest()
+            .authenticated();
+        return http.build();
+    }
+
+    @Bean 
+    public PasswordEncoder passwordEncoder()
+    { 
+        return new BCryptPasswordEncoder(); 
+    } 
+}
+// */
 
 @Entity
 class User
@@ -114,7 +180,7 @@ class Movie
         // TMDb API key
         String api_key = "dc7d794112655ff472cde48b94bab9bb";
         // generate adequate url for api endpoint call based on movie_id
-        String api_url = "https://api.themoviedb.org/3/movie" + movie_id + "?api_key=" + api_key;
+        String api_url = "https://api.themoviedb.org/3/movie/" + movie_id + "?api_key=" + api_key;
 
         Request request = new Request.Builder()
             .url(api_url)
@@ -132,7 +198,7 @@ class Movie
                 ResponseBody responseBody = response.body();
                 // check if response insn't null
                 if(responseBody != null)
-                {
+                {                                                   // https://mkyong.com/java/how-to-parse-json-with-gson/
                     // convert response into a json string
                     String jsonResponse = responseBody.string();
                     // parse json for title
